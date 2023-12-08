@@ -34,8 +34,8 @@ elif edition == "Hyper":
     max_speed = 6000
     final_max_speed = 3000
 
-max_speed = 5000
-final_max_speed = 3000
+#max_speed = 5000
+#final_max_speed = 3000
 calibration_speed = 1000
 calibration_count = 100
 #motors.flip_left(True)
@@ -85,7 +85,7 @@ last_update_ms = 0
 
 def update_display():
     display.fill(0)
-    display.text("Line Follower", 0, 0)
+    display.text(f"Max speed {max_speed}", 0, 0)
     if starting:
         display.text("Press A to stop", 0, 10)
     else:
