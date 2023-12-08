@@ -25,7 +25,7 @@ button_a = robot.ButtonA()
 
 max_speed = 6000
 final_max_speed = 2500
-counter = 0
+counter = 1500
 
 #max_speed = 5000
 #final_max_speed = 3000
