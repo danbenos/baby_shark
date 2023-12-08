@@ -132,6 +132,13 @@ def turn(dir):
         pass
 
 def display_path():
+    path[path_length] = 0
+
+    print(path)
+
+    if path_length > 8:
+        lcd_goto_xy(0, 1)
+        print(path + 8)
     pass
 
 def select_turn(found_left, found_straight, found_right):
@@ -145,6 +152,30 @@ def select_turn(found_left, found_straight, found_right):
         return 'B'
 
 def simplify_path():
+    if path_length < 3 or path[path_length-2] != 'B':
+        return
+
+    total_angle = 0
+    for i in range(1, 4):
+        if path[path_length-i] == 'R':
+            total_angle += 90
+        elif path[path_length-i] == 'L':
+            total_angle += 270
+        elif path[path_length-i] == 'B':
+            total_angle += 180
+
+    total_angle = total_angle % 360
+
+    if total_angle == 0:
+        path[path_length - 3] = 'S'
+    elif total_angle == 90:
+        path[path_length - 3] = 'R'
+    elif total_angle == 180:
+        path[path_length - 3] = 'B'
+    elif total_angle == 270:
+        path[path_length - 3] = 'L'
+
+    path_length -= 2
     pass
 
 def follow_segment():
@@ -152,10 +183,9 @@ def follow_segment():
     base_speed = 50
     set_point = 300
     integral = 0
-
     global t1, t2, line, max_speed, run_motors
-    while True:
 
+    while True:
         line = line_sensors.read_calibrated()[:]
         line_sensors.start_read()
         t1 = t2
@@ -164,27 +194,21 @@ def follow_segment():
         if line[0] > 600 and line[1] > 600 and line[2] > 600 and line[3] > 600 and line[4] > 600 :
             motors.off()
             return
-
         front = tof_front.range()
         right = tof_right.range()
         left = tof_left.range()
         left_proximity = 0
-
         proportional = left_proximity - set_point
         derivative = left_proximity - last_proximity
         integral += derivative
-
-        pd = proportional / 6 + integral / 200 + derivative * 2/5
+        pd = proportional/6 + integral/200 + derivative*2/5
         left_set = base_speed + pd
         right_set = base_speed - pd
         last_proximity = left_proximity
-
         if left_set < (base_speed - 100):
-            motors.set_speeds(base_speed+10, base_speed-10)
+            motors.set_speeds(base_speed + 10, base_speed - 10)
             time.sleep_ms(80)
-
         motors.set_speeds(left_set, right_set)
-
         if front == 0 and right == 0 and left == 0:
             turn_around()
             return
