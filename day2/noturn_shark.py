@@ -23,9 +23,9 @@ line_sensors = robot.LineSensors()
 button_a = robot.ButtonA()
 
 
-max_speed = 6000
+max_speed = 10000
 final_max_speed = 2500
-counter = 0
+counter = 1200
 
 #max_speed = 5000
 #final_max_speed = 3000
@@ -102,7 +102,7 @@ def update_display():
 
 def follow_line():
     last_p = 0
-    global p, ir, t1, t2, line, max_speed, final_max_speed, run_motors
+    global p, ir, t1, t2, line, max_speed, final_max_speed, run_motors, counter
     while True:
         # save a COPY of the line sensor data in a global variable
         # to allow the other thread to read it safely.

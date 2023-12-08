@@ -24,7 +24,8 @@ button_a = robot.ButtonA()
 
 
 max_speed = 6000
-final_max_speed = 3000
+final_max_speed = 2000
+initial_max_speed = 6000
 counter = 1400
 
 calibration_speed = 1000
@@ -98,7 +99,7 @@ def update_display():
 
 def follow_line():
     last_p = 0
-    global p, ir, t1, t2, line, max_speed, final_max_speed, run_motors, counter
+    global p, ir, t1, t2, line, max_speed, final_max_speed, run_motors, counter, initial_max_speed
     while True:
         # save a COPY of the line sensor data in a global variable
         # to allow the other thread to read it safely.
@@ -136,8 +137,10 @@ def follow_line():
             motors.set_speeds(left, right)
             if counter > 0:
                 counter -= 1
-                if counter <= 0:
+                if 500 <= counter <= 800 or counter <= 0:
                     max_speed = final_max_speed
+                else:
+                    max_speed = initial_max_speed
         else:
             motors.off()
 
