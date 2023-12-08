@@ -137,7 +137,7 @@ def follow_line():
             motors.set_speeds(left, right)
             if counter > 0:
                 counter -= 1
-                if 500 <= counter <= 800 or counter <= 0:
+                if 300 <= counter <= 1000 or counter <= 0:
                     max_speed = final_max_speed
                 else:
                     max_speed = initial_max_speed
