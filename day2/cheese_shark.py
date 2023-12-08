@@ -25,14 +25,14 @@ button_a = robot.ButtonA()
 
 edition = editions.select()
 if edition == "Standard":
-    max_speed = 5000
-    final_max_speed = 2500
+    max_speed = 6000
+    final_max_speed = 4000
 elif edition == "Turtle":
-    max_speed = 5000
-    final_max_speed = 3000
+    max_speed = 6000
+    final_max_speed = 4500
 elif edition == "Hyper":
     max_speed = 6000
-    final_max_speed = 3000
+    final_max_speed = 5000
 
 #max_speed = 5000
 #final_max_speed = 3000
@@ -145,7 +145,7 @@ def follow_line():
 
         if run_motors:
             motors.set_speeds(left, right)
-            max_speed = max(max_speed - 3, final_max_speed)
+            max_speed = max(max_speed - 1, final_max_speed)
         else:
             motors.off()
 
