@@ -26,7 +26,7 @@ button_a = robot.ButtonA()
 max_speed = 6000
 final_max_speed = 2000
 initial_max_speed = 6000
-counter = 1400
+counter = 1600
 
 calibration_speed = 1000
 calibration_count = 100
@@ -137,7 +137,7 @@ def follow_line():
             motors.set_speeds(left, right)
             if counter > 0:
                 counter -= 1
-                if 300 <= counter <= 1000 or counter <= 0:
+                if 400 <= counter <= 1000 or counter <= 0:
                     max_speed = final_max_speed
                 else:
                     max_speed = initial_max_speed
