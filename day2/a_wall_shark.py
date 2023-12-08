@@ -12,6 +12,8 @@
 from pololu_3pi_2040_robot import robot
 from pololu_3pi_2040_robot.extras import editions
 import time
+from machine import I2C, Pin
+from vl6180x import Sensor
 import _thread
 
 display = robot.Display()
@@ -22,14 +24,15 @@ line_sensors = robot.LineSensors()
 # multi-core program.
 button_a = robot.ButtonA()
 
+tof_left = None
+tof_right = None
+tof_front = None
 
-max_speed = 6000
-final_max_speed = 2000
-initial_max_speed = 6000
-counter = 1600
-
+max_speed = 2000
 calibration_speed = 1000
 calibration_count = 100
+#motors.flip_left(True)
+#motors.flip_right(True)
 
 display.fill(0)
 display.text("Line Follower", 0, 0)
@@ -73,9 +76,58 @@ starting = False
 run_motors = False
 last_update_ms = 0
 
+def int_percent(value, percent):
+    return value * percent // 100
+
+
+def initialize():
+    global tof_left, tof_right, tof_front
+
+    i2c = I2C(id=0, scl=Pin(5), sda=Pin(4), freq=400_000)
+    time.sleep_ms(1000)
+
+    pinL = Pin(16, Pin.OUT)
+    pinF = Pin(17, Pin.OUT)
+    pinR = Pin(18, Pin.OUT)
+
+    # Set I2C addresses of the sensors
+    pinL.value(1)
+    time.sleep_ms(100)
+    pinF.value(0)
+    time.sleep_ms(100)
+    pinR.value(0)
+    time.sleep_ms(100)
+    tof_left = Sensor(i2c)
+    time.sleep_ms(100)
+    tof_left.address(100)
+    time.sleep_ms(10)
+
+    pinF.value(1)
+    time.sleep_ms(100)
+    tof_front = Sensor(i2c)
+    time.sleep_ms(100)
+    tof_front.address(10)
+    time.sleep_ms(10)
+
+    pinR.value(1)
+    time.sleep_ms(100)
+    tof_right = Sensor(i2c)
+    time.sleep_ms(100)
+    tof_right.address(9)
+    time.sleep_ms(10)
+
+    display.fill(0)
+    display.text("Initialized", 0, 0)
+    display.show()
+    time.sleep_ms(1000)
+
+    display.fill(0)
+    display.text("    Go!", 0, 0)
+    display.show()
+
 def update_display():
     display.fill(0)
-    display.text(f"Max speed {max_speed}", 0, 0)
+    display.text("Line Follower", 0, 0)
     if starting:
         display.text("Press A to stop", 0, 10)
     else:
@@ -99,7 +151,7 @@ def update_display():
 
 def follow_line():
     last_p = 0
-    global p, ir, t1, t2, line, max_speed, final_max_speed, run_motors, counter, initial_max_speed
+    global p, ir, t1, t2, line, max_speed, run_motors, starting
     while True:
         # save a COPY of the line sensor data in a global variable
         # to allow the other thread to read it safely.
@@ -114,41 +166,39 @@ def follow_line():
                 motors.off()
                 starting = False
                 run_motors = False
-        
-        if line[1] < 400 and line[2] < 400 and line[3] < 400:
-            if p < 0:
-                l = 0
-            else:
-                l = 4000
-        else:
-            # estimate line position
-            l = (1000*line[1] + 2000*line[2] + 3000*line[3] + 4000*line[4]) // \
-                sum(line)
-            # l = 2000 if centered, l = 0 (negative p) if need to turn left, l = 4000 (positive p) if need to turn right
-            # if sensors give some number, small = close, large = far
-            # right sensor - left sensor = 0 if equal, negative if need to turn left (close to right wall), positive for turn right
 
-        p = l - 2000
+        front = tof_front.range()
+        right = tof_right.range()
+        left = tof_left.range()
+
+        l = (right - left) * 4
+        
+        # if line[1] < 400 and line[2] < 400 and line[3] < 400:
+        #     if p < 0:
+        #         l = 0
+        #     else:
+        #         l = 4000
+        # else:
+        #     # estimate line position
+        #     l = (1000*line[1] + 2000*line[2] + 3000*line[3] + 4000*line[4]) // \
+        #         sum(line)
+
+        p = l
         d = p - last_p
         last_p = p
         pid = p*90 + d*2000
 
         min_speed = 0
-        left = max(min_speed, min(max_speed, max_speed + pid))
-        right = max(min_speed, min(max_speed, max_speed - pid))
+        left = int_percent(max(min_speed, min(max_speed, max_speed + pid)), 50)
+        right = int_percent(max(min_speed, min(max_speed, max_speed - pid)), 50)
 
 
         if run_motors:
             motors.set_speeds(left, right)
-            if counter > 0:
-                counter -= 1
-                if 400 <= counter <= 1000 or counter <= 0:
-                    max_speed = final_max_speed
-                else:
-                    max_speed = initial_max_speed
         else:
             motors.off()
 
+initialize()
 
 # Sleep immediately after starting a thread to work around this bug:
 # https://github.com/micropython/micropython/issues/10621
